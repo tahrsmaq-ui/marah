@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إلى مرح... ❤️</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #090d16;
+            --bg-card: rgba(18, 24, 38, 0.75);
+            --bg-card-hover: rgba(28, 36, 56, 0.85);
+            --accent-pink: #f472b6;
+            --accent-pink-glow: rgba(244, 114, 182, 0.3);
+            --accent-gold: #fbbf24;
+            --accent-gold-glow: rgba(251, 191, 36, 0.25);
+            --text-main: #f8fafc;
+            --text-sub: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-glow: rgba(244, 114, 182, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Cairo', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Stars Background Canvas */
+        #stars-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Petals Canvas */
+        #petals-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 99;
+        }
+
+        /* Main Container */
+        .app-container {
+            width: 100%;
+            max-width: 680px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 24px 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Top Bar & Progress */
+        .top-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            font-family: 'Amiri', serif;
+            font-size: 1.25rem;
+            color: var(--accent-pink);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: bold;
+        }
+
+        .sound-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-glow);
+            color: var(--text-sub);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sound-btn:hover, .sound-btn.active {
+            background: rgba(244, 114, 182, 0.15);
+            border-color: var(--accent-pink);
+            color: #fff;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 16.66%;
+            background: linear-gradient(90deg, var(--accent-pink), var(--accent-gold));
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px var(--accent-pink-glow);
+        }
+
+        /* Slide Viewport */
+        .content-viewport {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin: 10px 0;
+        }
+
+        .slide {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-glow);
+            border-radius: 24px;
+            padding: 32px 24px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px) scale(0.98);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        /* Typography & Components */
+        .title-lg {
+            font-family: 'Amiri', serif;
+            font-size: 2.2rem;
+            color: var(--accent-pink);
+            margin-bottom: 16px;
+            line-height: 1.4;
+            text-shadow: 0 0 20px var(--accent-pink-glow);
+        }
+
+        .title-gold {
+            color: var(--accent-gold);
+            text-shadow: 0 0 20px var(--accent-gold-glow);
+        }
+
+        .text-body {
+            font-size: 1.05rem;
+            line-height: 1.9;
+            color: var(--text-sub);
+            margin-bottom: 18px;
+            white-space: pre-line;
+            text-align: justify;
+            text-justify: inter-word;
+        }
+
+        .poem-box {
+            background: rgba(251, 191, 36, 0.05);
+            border-right: 3px solid var(--accent-gold);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            width: 100%;
+            font-family: 'Amiri', serif;
+            font-size: 1.25rem;
+            line-height: 2.2;
+            color: #fef08a;
+            text-align: center;
+        }
+
+        .heart-pulse {
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, rgba(244,114,182,0.2) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 15px 0 25px 0;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+
+        .heart-pulse svg {
+            width: 44px;
+            height: 44px;
+            fill: var(--accent-pink);
+            filter: drop-shadow(0 0 10px var(--accent-pink));
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 114, 182, 0.4); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(244, 114, 182, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 114, 182, 0); }
+        }
+
+        /* Envelopes Grid */
+        .envelope-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+            width: 100%;
+            margin: 15px 0;
+        }
+
+        .envelope-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed var(--border-glow);
+            border-radius: 16px;
+            padding: 16px 20px;
+            cursor: pointer;
+            text-align: right;
+            transition: all 0.3s ease;
+        }
+
+        .envelope-card:hover {
+            background: rgba(244, 114, 182, 0.08);
+            border-color: var(--accent-pink);
+            transform: translateX(-4px);
+        }
+
+        .envelope-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: var(--accent-pink);
+        }
+
+        .envelope-content {
+            display: none;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.95rem;
+            color: var(--text-sub);
+            line-height: 1.7;
+        }
+
+        .envelope-card.open .envelope-content {
+            display: block;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        /* Navigation Buttons */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-pink), #db2777);
+            color: #fff;
+            box-shadow: 0 6px 20px var(--accent-pink-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(244, 114, 182, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-glow);
+            color: var(--text-sub);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .btn-whatsapp {
+            background: #25D366;
+            color: white;
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.3);
+            width: 100%;
+            justify-content: center;
+            margin-top: 15px;
+            text-decoration: none;
+        }
+
+        .btn-whatsapp:hover {
+            box-shadow: 0 10px 25px rgba(37, 211, 102, 0.5);
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 480px) {
+            .app-container { padding: 16px 14px; }
+            .slide { padding: 24px 18px; }
+            .title-lg { font-size: 1.8rem; }
+            .text-body { font-size: 0.98rem; line-height: 1.8; }
+            .poem-box { font-size: 1.1rem; padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="stars-canvas"></canvas>
+    <canvas id="petals-canvas"></canvas>
+
+    <div class="app-container">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="header-info">
+                <div class="brand">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    إلى مرح
+                </div>
+                <button class="sound-btn" id="soundToggle">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                    <span id="soundStatus">الموسيقى: إيقاف</span>
+                </button>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+
+        <!-- Viewport for Slides -->
+        <div class="content-viewport">
+            
+            <!-- Slide 1: Welcome -->
+            <div class="slide active" data-slide="1">
+                <div class="heart-pulse" onclick="nextSlide()">
+                    <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                </div>
+                <h1 class="title-lg">مرح... ❤️</h1>
+                <p class="text-body" style="text-align: center;">
+                    لا أعرف من أين أبدأ، ولا كيف يمكن للكلمات أن تحمل شعوراً أكبر من قدرتها...
+                    لكنني أعرف أن في قلبي حديثاً طويلاً إليكِ، كلما حاولت أن أختصره اتّسع، وكلما أردت أن أخفيه فضحته نظراتي وحروفي واهتمامي بكِ.
+                </p>
+                <p style="color: var(--accent-gold); font-size: 0.9rem; margin-top: 10px;">(اضغطي على القلب أو زر التالي للبدء في القراءة)</p>
+            </div>
+
+            <!-- Slide 2: The Presence -->
+            <div class="slide" data-slide="2">
+                <h2 class="title-lg title-gold">وعدٌ بالفرح</h2>
+                <div class="text-body">
+يا مرح، أتعلمين؟
+ثّمّة أشخاص نعبر بهم في هذه الحياة كما نعبر من شارع إلى آخر، وثمّة أشخاص حين يدخلون أيامنا نشعر أن شيئاً في أرواحنا قد تغيّر، كأن الحياة كانت تكتب حكاية ناقصة، ثم جاءت بهم لتضع النقطة التي انتظرناها طويلاً.
+
+وأنتِ بالنسبة إليّ لستِ مجرد فتاة أعجبتني، ولا حديثاً جميلاً يمرّ في يومي ثم ينتهي، أنتِ حكاية بدأت تكبر في داخلي دون أن أستأذن قلبي.
+                </div>
+            </div>
+
+            <!-- Slide 3: The Confession -->
+            <div class="slide" data-slide="3">
+                <h2 class="title-lg">أنا أحبكِ يا مرح</h2>
+                <div class="text-body">
+ولذلك قررت اليوم أن أتوقف عن الاختباء خلف المزاح والكلمات العابرة، وأن أقول لكِ ما ظلّ قلبي يحاول قوله بكل الطرق:
+
+أنا أحبكِ يا مرح. ❤️
+
+أحبكِ، وليس في هذه الجملة مبالغة شاعر يريد أن يدهشكِ، بل حقيقة رجل وجد نفسه يميل إليكِ أكثر مما كان يتوقع، ويشتاق إلى حديثكِ أكثر مما يعترف، ويفرح بوجودكِ أكثر مما تستطيع الكلمات أن تشرح.
+                </div>
+            </div>
+
+            <!-- Slide 4: Poetry & Promise -->
+            <div class="slide" data-slide="4">
+                <h2 class="title-lg title-gold">قصيدة لا تنتهي</h2>
+                <div class="text-body">
+أريد أن أكون الرجل الذي يجد فيكِ قصيدته كلما عجز عن الكتابة، والذي يرى في ابتسامتكِ بيتاً من الشعر، وفي حديثكِ موسيقى...
+                </div>
+                <div class="poem-box">
+                    ما كنتُ أؤمن أن للعينين وطناً<br>
+                    حتى رأيتُكِ فاستوطنتِ الوجدانِ<br>
+                    وما كنتُ أعرف أن للاسم أغنيةً<br>
+                    حتى سمعتُ اسمكِ يسري في شرياني
+                </div>
+            </div>
+
+            <!-- Slide 5: Interactive Envelopes -->
+            <div class="slide" data-slide="5">
+                <h2 class="title-lg">رسائل في خافقي</h2>
+                <p class="text-body" style="text-align: center; margin-bottom: 10px;">اضغطي على الأظرف التالية لاكتشاف ما يُخفيه القلب:</p>
+                
+                <div class="envelope-grid">
+                    <div class="envelope-card" onclick="toggleEnvelope(this)">
+                        <div class="envelope-header">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                            ماذا يعني لي اسمكِ؟
+                        </div>
+                        <div class="envelope-content">
+                            يعني أن بعض الأسماء ليست أسماءً فحسب، بل مواسم جميلة تأتي إلى القلب، وأن بعض النساء لا يحتجن إلى ربيعٍ في الخارج، لأنهن يحملن الربيع في أرواحنا. وأنتِ يا مرح، كأن اسمكِ خُلق ليكون وعداً بالفرح.
+                        </div>
+                    </div>
+
+                    <div class="envelope-card" onclick="toggleEnvelope(this)">
+                        <div class="envelope-header">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                            وعدي الصادق لكِ...
+                        </div>
+                        <div class="envelope-content">
+                            لا أعدكِ بحياة خالية من التعب، ولا أزعم أنني أملك مفاتيح السعادة كلها، لكنني أعدكِ أن يكون شعوري تجاهكِ صادقاً، وأن أحترم قلبكِ، وأن أقدّر وجودكِ، وأن لا أجعل من حبي لكِ عبئاً عليكِ.
+                        </div>
+                    </div>
+
+                    <div class="envelope-card" onclick="toggleEnvelope(this)">
+                        <div class="envelope-header">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                            أجمل ما حدث لقلبي...
+                        </div>
+                        <div class="envelope-content">
+                            أنتِ المرأة التي لم أكن أعرف أن قلبي ينتظرها، حتى جئتِ... ولستِ قصيدتي الأجمل فحسب، بل أنتِ السبب الذي جعلني أؤمن أن بعض الأسماء حين تسكن القلب، تصبح وطناً لا نرغب في مغادره.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 6: Outro & Action -->
+            <div class="slide" data-slide="6">
+                <h2 class="title-lg title-gold">البداية وليست النهاية</h2>
+                <div class="text-body" style="text-align: center;">
+                    وهذه ليست خاتمة رسالتي، بل بداية اعترافي بكِ، وبكل ما أشعر به نحوكِ، وبكل القصائد التي لم أكتبها بعد...
+                    <br><br>
+                    <strong>أحبكِ يا مرح... ❤️</strong>
+                </div>
+
+                <button class="btn btn-primary" onclick="triggerPetalsShower()" style="margin-top: 10px; width: 100%; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    أمطر الشاشة بالورود ✨
+                </button>
+
+                <a href="https://api.whatsapp.com/send?text=قرأت%20رسالتك%20الجميلة...%20❤️" target="_blank" class="btn btn-whatsapp">
+                    أرسلي ردكِ الدافئ على الواتساب 💬
+                </a>
+            </div>
+
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button class="btn btn-secondary" id="prevBtn" onclick="prevSlide()" disabled>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                السابق
+            </button>
+            <span id="slideCounter" style="font-size: 0.85rem; color: var(--text-muted);">1 / 6</span>
+            <button class="btn btn-primary" id="nextBtn" onclick="nextSlide()">
+                التالي
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 6;
+        let isAudioPlaying = false;
+        let audioCtx = null;
+        let oscillator = null;
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            initStars();
+            initPetals();
+            updateUI();
+        });
+
+        // Slide Navigation
+        function showSlide(index) {
+            if (index < 1 || index > totalSlides) return;
+            
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+
+            const nextTarget = document.querySelector(`.slide[data-slide="${index}"]`);
+            if(nextTarget) {
+                nextTarget.classList.add('active');
+            }
+
+            currentSlide = index;
+            updateUI();
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                showSlide(currentSlide + 1);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) {
+                showSlide(currentSlide - 1);
+            }
+        }
+
+        function updateUI() {
+            // Update Buttons
+            document.getElementById('prevBtn').disabled = (currentSlide === 1);
+            const nextBtn = document.getElementById('nextBtn');
+            if (currentSlide === totalSlides) {
+                nextBtn.style.display = 'none';
+            } else {
+                nextBtn.style.display = 'flex';
+            }
+
+            // Update Counter & Progress
+            document.getElementById('slideCounter').innerText = `${currentSlide} / ${totalSlides}`;
+            const progress = (currentSlide / totalSlides) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+        }
+
+        // Toggle Envelope Card
+        function toggleEnvelope(card) {
+            card.classList.toggle('open');
+        }
+
+        // Stars Background
+        function initStars() {
+            const canvas = document.getElementById('stars-canvas');
+            const ctx = canvas.getContext('2d');
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
+
+            window.addEventListener('resize', () => {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            });
+
+            const stars = Array.from({ length: 70 }, () => ({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                size: Math.random() * 1.8 + 0.5,
+                alpha: Math.random(),
+                speed: Math.random() * 0.015 + 0.005
+            }));
+
+            function draw() {
+                ctx.clearRect(0, 0, width, height);
+                stars.forEach(star => {
+                    star.alpha += star.speed;
+                    if (star.alpha > 1 || star.alpha < 0) star.speed = -star.speed;
+
+                    ctx.fillStyle = `rgba(244, 114, 182, ${Math.abs(star.alpha) * 0.7})`;
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        // Petals Shower Effect
+        let petals = [];
+        let petalsCtx = null;
+        let petalsCanvas = null;
+
+        function initPetals() {
+            petalsCanvas = document.getElementById('petals-canvas');
+            petalsCtx = petalsCanvas.getContext('2d');
+            petalsCanvas.width = window.innerWidth;
+            petalsCanvas.height = window.innerHeight;
+
+            window.addEventListener('resize', () => {
+                petalsCanvas.width = window.innerWidth;
+                petalsCanvas.height = window.innerHeight;
+            });
+        }
+
+        function triggerPetalsShower() {
+            const colors = ['#f472b6', '#fb7185', '#f43f5e', '#fbcfe8'];
+            for (let i = 0; i < 45; i++) {
+                petals.push({
+                    x: Math.random() * petalsCanvas.width,
+                    y: -20,
+                    size: Math.random() * 10 + 8,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speedY: Math.random() * 2 + 1.5,
+                    speedX: Math.random() * 2 - 1,
+                    rotation: Math.random() * 360,
+                    rotSpeed: Math.random() * 2 - 1
+                });
+            }
+            if (petals.length <= 45) {
+                renderPetals();
+            }
+        }
+
+        function renderPetals() {
+            petalsCtx.clearRect(0, 0, petalsCanvas.width, petalsCanvas.height);
+            petals.forEach((p, index) => {
+                p.y += p.speedY;
+                p.x += Math.sin(p.y * 0.02) + p.speedX;
+                p.rotation += p.rotSpeed;
+
+                petalsCtx.save();
+                petalsCtx.translate(p.x, p.y);
+                petalsCtx.rotate((p.rotation * Math.PI) / 180);
+                petalsCtx.fillStyle = p.color;
+                petalsCtx.beginPath();
+                petalsCtx.ellipse(0, 0, p.size, p.size / 2, 0, 0, Math.PI * 2);
+                petalsCtx.fill();
+                petalsCtx.restore();
+
+                if (p.y > petalsCanvas.height + 20) {
+                    petals.splice(index, 1);
+                }
+            });
+
+            if (petals.length > 0) {
+                requestAnimationFrame(renderPetals);
+            }
+        }
+
+        // Web Audio Synthesizer (Ambient Sound)
+        const soundBtn = document.getElementById('soundToggle');
+        soundBtn.addEventListener('click', () => {
+            if (!isAudioPlaying) {
+                startAmbientSound();
+                soundBtn.classList.add('active');
+                document.getElementById('soundStatus').innerText = 'الموسيقى: شغال';
+                isAudioPlaying = true;
+            } else {
+                stopAmbientSound();
+                soundBtn.classList.remove('active');
+                document.getElementById('soundStatus').innerText = 'الموسيقى: إيقاف';
+                isAudioPlaying = false;
+            }
+        });
+
+        function startAmbientSound() {
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(220, audioCtx.currentTime); // Soft A3 note
+                
+                // Lowpass filter for warmness
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(400, audioCtx.currentTime);
+
+                gainNode.gain.setValueAtTime(0.01, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.08, audioCtx.currentTime + 3);
+
+                oscillator.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                oscillator.start();
+            } catch(e) {
+                console.log("Audio play prevented");
+            }
+        }
+
+        function stopAmbientSound() {
+            if (audioCtx) {
+                audioCtx.close();
+            }
+        }
+    </script>
+</body>
+</html>
