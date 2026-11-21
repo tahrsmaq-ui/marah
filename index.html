@@ -115,6 +115,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            font-family: 'Cairo', sans-serif;
         }
 
         .sound-btn:hover, .sound-btn.active {
@@ -494,7 +495,7 @@
                     أمطر الشاشة بالورود ✨
                 </button>
 
-                <a href="https://api.whatsapp.com/send?text=قرأت%20رسالتك%20الجميلة...%20❤️" target="_blank" class="btn btn-whatsapp">
+                <a href="https://wa.me/963932510043?text=%D9%88%D8%B5%D9%84%D8%AA%D9%86%D9%8A%20%D8%B1%D8%B3%D8%A7%D9%84%D8%AA%D9%83%20%D8%A7%D9%84%D8%AC%D9%85%D9%8A%D9%84%D8%A9...%20%E2%9D%A4%EF%B8%8F" target="_blank" class="btn btn-whatsapp">
                     أرسلي ردكِ الدافئ على الواتساب 💬
                 </a>
             </div>
@@ -520,7 +521,8 @@
         const totalSlides = 6;
         let isAudioPlaying = false;
         let audioCtx = null;
-        let oscillator = null;
+        let melodyInterval = null;
+        let mainGain = null;
 
         // Initialize App
         document.addEventListener('DOMContentLoaded', () => {
@@ -559,7 +561,6 @@
         }
 
         function updateUI() {
-            // Update Buttons
             document.getElementById('prevBtn').disabled = (currentSlide === 1);
             const nextBtn = document.getElementById('nextBtn');
             if (currentSlide === totalSlides) {
@@ -568,7 +569,6 @@
                 nextBtn.style.display = 'flex';
             }
 
-            // Update Counter & Progress
             document.getElementById('slideCounter').innerText = `${currentSlide} / ${totalSlides}`;
             const progress = (currentSlide / totalSlides) * 100;
             document.getElementById('progressBar').style.width = `${progress}%`;
@@ -677,52 +677,110 @@
             }
         }
 
-        // Web Audio Synthesizer (Ambient Sound)
+        // Romantic Ambient Arpeggio Synthesizer
         const soundBtn = document.getElementById('soundToggle');
         soundBtn.addEventListener('click', () => {
             if (!isAudioPlaying) {
-                startAmbientSound();
+                startRomanticMelody();
                 soundBtn.classList.add('active');
                 document.getElementById('soundStatus').innerText = 'الموسيقى: شغال';
                 isAudioPlaying = true;
             } else {
-                stopAmbientSound();
+                stopRomanticMelody();
                 soundBtn.classList.remove('active');
                 document.getElementById('soundStatus').innerText = 'الموسيقى: إيقاف';
                 isAudioPlaying = false;
             }
         });
 
-        function startAmbientSound() {
+        function playSoftNote(freq, duration = 2.4, volume = 0.06) {
+            if (!audioCtx || audioCtx.state !== 'running') return;
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const subOsc = audioCtx.createOscillator();
+            const noteGain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now);
+
+            subOsc.type = 'triangle';
+            subOsc.frequency.setValueAtTime(freq / 2, now);
+
+            const subGain = audioCtx.createGain();
+            subGain.gain.setValueAtTime(0.25, now);
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(900, now);
+            filter.frequency.exponentialRampToValueAtTime(320, now + duration);
+
+            noteGain.gain.setValueAtTime(0.0001, now);
+            noteGain.gain.linearRampToValueAtTime(volume, now + 0.18);
+            noteGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+            osc.connect(filter);
+            subOsc.connect(subGain);
+            subGain.connect(filter);
+            filter.connect(noteGain);
+            noteGain.connect(mainGain);
+
+            osc.start(now);
+            subOsc.start(now);
+            osc.stop(now + duration + 0.05);
+            subOsc.stop(now + duration + 0.05);
+        }
+
+        function startRomanticMelody() {
             try {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
+                if (!audioCtx) {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    audioCtx = new AudioContextClass();
+                    mainGain = audioCtx.createGain();
+                    mainGain.gain.setValueAtTime(0.85, audioCtx.currentTime);
+                    mainGain.connect(audioCtx.destination);
+                }
 
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(220, audioCtx.currentTime); // Soft A3 note
-                
-                // Lowpass filter for warmness
-                const filter = audioCtx.createBiquadFilter();
-                filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(400, audioCtx.currentTime);
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
 
-                gainNode.gain.setValueAtTime(0.01, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.08, audioCtx.currentTime + 3);
+                // Gentle emotional sequence in A minor / F major / C major / G major
+                const notes = [
+                    220.00, // A3
+                    261.63, // C4
+                    329.63, // E4
+                    392.00, // G4
+                    329.63, // E4
+                    261.63, // C4
+                    293.66, // D4
+                    349.23, // F4
+                    440.00, // A4
+                    392.00, // G4
+                    349.23, // F4
+                    293.66  // D4
+                ];
 
-                oscillator.connect(filter);
-                filter.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
+                let step = 0;
+                playSoftNote(notes[step], 2.8, 0.065);
+                step++;
 
-                oscillator.start();
-            } catch(e) {
-                console.log("Audio play prevented");
+                melodyInterval = setInterval(() => {
+                    playSoftNote(notes[step % notes.length], 2.8, 0.065);
+                    step++;
+                }, 720);
+            } catch (e) {
+                console.log("Audio playback prevented");
             }
         }
 
-        function stopAmbientSound() {
-            if (audioCtx) {
-                audioCtx.close();
+        function stopRomanticMelody() {
+            if (melodyInterval) {
+                clearInterval(melodyInterval);
+                melodyInterval = null;
+            }
+            if (audioCtx && audioCtx.state === 'running') {
+                audioCtx.suspend();
             }
         }
     </script>
